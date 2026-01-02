@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLINICAL LABORATORY FINAL</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent: #4ecca3;
+            --danger: #ff5252;
+            --warning: #ffd740;
+            --rational-bg: #2c3e50;
+            --rational-border: #3498db;
+            --dimmed: #333;
+            --rgb-anim: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            flex-direction: column;
+        }
+
+        /* --- BACKGROUND EMOJIS --- */
+        #emoji-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-emoji {
+            position: absolute;
+            opacity: 0.1;
+            font-size: 5rem;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.2; }
+            80% { opacity: 0.2; }
+            100% { transform: translateY(-10vh) rotate(20deg); opacity: 0; }
+        }
+
+        /* --- CONTAINER --- */
+        .quiz-container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+            width: 95%;
+            max-width: 900px;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #333;
+            max-height: 95vh;
+        }
+
+        /* --- HEADER --- */
+        .quiz-header {
+            background: #151515;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #333;
+        }
+        
+        .main-title {
+            font-size: 1.8rem;
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* FINAL RGB SHAKE */
+        .final-anim {
+            display: inline-block;
+            background: var(--rgb-anim);
+            background-size: 1800% 1800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbowMove 3s ease infinite, shake 0.5s infinite;
+            margin-left: 5px;
+            font-size: 2.2rem;
+        }
+
+        @keyframes rainbowMove {
+            0% { background-position: 0% 82%; }
+            50% { background-position: 100% 19%; }
+            100% { background-position: 0% 82%; }
+        }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            25% { transform: translate(-1px, -2px) rotate(-1deg); }
+            50% { transform: translate(-3px, 0px) rotate(1deg); }
+            75% { transform: translate(3px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -1px) rotate(1deg); }
+        }
+
+        /* --- TOOLBAR --- */
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 10px;
+            background: #252525;
+            border-bottom: 1px solid #333;
+        }
+        .tool-btn {
+            background: #333;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tool-btn:hover { background: #444; }
+        .tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .flag-btn.active { background: var(--warning); color: #000; font-weight: bold; }
+        .eliminate-btn { border-color: var(--danger); color: var(--danger); }
+
+        /* --- INFO BAR --- */
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #1e1e1e;
+            font-size: 0.9rem;
+        }
+        .timer {
+            font-weight: bold;
+            color: var(--danger);
+            font-family: monospace;
+            font-size: 1.2rem;
+        }
+
+        /* --- NAVIGATION GRID --- */
+        .nav-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 10px 20px;
+            justify-content: center;
+            background: #181818;
+            max-height: 100px;
+            overflow-y: auto;
+            border-bottom: 1px solid #333;
+        }
+        .nav-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 5px;
+            background: #333;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 0.8rem;
+            position: relative;
+            transition: 0.2s;
+        }
+        .nav-btn:hover { background: #444; }
+        .nav-btn.active { border: 2px solid var(--accent); color: #fff; background: #444; }
+        .nav-btn.answered { background: var(--accent); color: #000; font-weight: bold; }
+        .nav-btn.flagged::after {
+            content: '🚩';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 10px;
+        }
+
+        /* --- QUIZ BODY --- */
+        .quiz-body {
+            padding: 30px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .option-container {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .option-btn {
+            padding: 15px 20px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            background: transparent;
+            color: #ddd;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            font-size: 1rem;
+            position: relative;
+        }
+        .option-btn:hover:not(.disabled) {
+            background: #2a2a2a;
+            border-color: #666;
+        }
+        .option-btn.selected {
+            background: rgba(78, 204, 163, 0.2);
+            border-color: var(--accent);
+        }
+        .option-btn.disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+        .option-btn.eliminated {
+            opacity: 0.1;
+            pointer-events: none;
+            border-style: dashed;
+        }
+
+        /* --- RATIONAL BOX --- */
+        .rational-card {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            border-left: 5px solid var(--rational-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: slideDown 0.4s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .rational-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #3498db;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .rational-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #ecf0f1;
+            font-style: italic;
+        }
+
+        /* --- CONTROLS --- */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background: #151515;
+            border-top: 1px solid #333;
+        }
+        .ctrl-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+        .prev-btn, .next-btn { background: #333; color: #fff; }
+        .prev-btn:hover, .next-btn:hover { background: #444; }
+
+        /* --- RESULTS & REVIEW --- */
+        .results-container {
+            display: none;
+            padding: 40px;
+            text-align: center;
+            height: 100%;
+            overflow-y: auto;
+        }
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 8px solid var(--accent);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            color: var(--accent);
+            box-shadow: 0 0 30px rgba(78, 204, 163, 0.3);
+        }
+        .review-list {
+            text-align: left;
+            margin-top: 30px;
+        }
+        .review-item {
+            background: #252525;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #555;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .review-item.correct { border-left-color: var(--accent); }
+        .review-item.incorrect { border-left-color: var(--danger); }
+        .rev-q { font-weight: bold; margin-bottom: 10px; display: block; }
+        .rev-opt { display: block; margin: 5px 0; padding: 8px; border-radius: 4px; background: #333; }
+        .rev-opt.user-choice { border: 1px solid #666; }
+        .rev-opt.right-answer { background: rgba(78, 204, 163, 0.2); color: var(--accent); }
+        .rev-opt.wrong-answer { text-decoration: line-through; color: #888; }
+
+        /* Footer */
+        .copyright {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.8rem;
+            color: #666;
+            background: #0f0f0f;
+        }
+
+        /* --- CANVAS --- */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+<div id="emoji-bg"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<div class="quiz-container">
+    <div class="quiz-header">
+        <h1 class="main-title">CLINICAL LABORATORY <span class="final-anim">FINAL</span></h1>
+    </div>
+    
+    <!-- Active Quiz View -->
+    <div id="quiz-view">
+        <div class="toolbar">
+            <button class="tool-btn flag-btn" id="btn-flag" onclick="toggleFlag()">
+                <span>🚩</span> Flag
+            </button>
+            <button class="tool-btn eliminate-btn" id="btn-eliminate" onclick="eliminateAnswers()">
+                <span>⚡</span> Eliminate 2 (50:50)
+            </button>
+            <button class="tool-btn" id="btn-sound" onclick="toggleSound()">
+                <span id="sound-icon">🔊</span> Sound ON
+            </button>
+        </div>
+
+        <div class="info-bar">
+            <span id="progress-text">Question 1 of 100</span>
+            <span class="timer" id="timer-display">60:00</span>
+        </div>
+
+        <div class="nav-grid" id="nav-grid"></div>
+
+        <div class="quiz-body">
+            <div class="question-text" id="question">Loading...</div>
+            <div class="option-container" id="options"></div>
+            
+            <!-- Rational Container -->
+            <div class="rational-card" id="rational-box">
+                <div class="rational-header">
+                    <span>💡</span> Clinical Rational
+                </div>
+                <div class="rational-text" id="rational-text">
+                    <!-- Rational text goes here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="ctrl-btn prev-btn" onclick="changeQuestion(-1)">Prev</button>
+            <button class="ctrl-btn next-btn" onclick="changeQuestion(1)">Next</button>
+        </div>
+    </div>
+
+    <!-- Results/Review View -->
+    <div id="results-view" class="results-container">
+        <div class="score-circle" id="final-score">0%</div>
+        <h2>TEST COMPLETED</h2>
+        <p>Review your detailed performance below.</p>
+        <div class="review-list" id="review-list"></div>
+        <button class="ctrl-btn next-btn" onclick="location.reload()" style="margin-top:20px; display:inline-block;">Restart Final</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="copyright">
+        © AMER ALSHARIF 2026
+    </div>
+</div>
+
+<script>
+    // --- DATA (Original Order) ---
+    const quizDataRaw = [
+        // IMMUNE SYSTEM
+        { q: "What is the primary function of the immune system?", o: ["Transport oxygen", "Protect against infections and foreign substances", "Regulate body temperature", "Produce hormones"], a: "Protect against infections and foreign substances" },
+        { q: "Which cells are known as phagocytes?", o: ["Basophils and eosinophils", "Neutrophils and macrophages", "T cells and B cells", "Platelets and erythrocytes"], a: "Neutrophils and macrophages" },
+        { q: "What is the role of cytotoxic T cells?", o: ["Release histamine", "Produce antibodies", "Destroy virus-infected or cancerous cells", "Coordinate immune responses"], a: "Destroy virus-infected or cancerous cells" },
+        { q: "Which antibody is the most abundant in blood and tissues?", o: ["IgA", "IgM", "IgG", "IgE"], a: "IgG" },
+        { q: "IgA is primarily found in:", o: ["Blood", "Mucosal surfaces", "Bone marrow", "Lymph nodes"], a: "Mucosal surfaces" },
+        { q: "Which antibody is the first responder in an immune response?", o: ["IgG", "IgA", "IgM", "IgD"], a: "IgM" },
+        { q: "IgE is involved in:", o: ["Long-term immunity", "Mucosal protection", "Allergy and parasite defense", "B-cell activation"], a: "Allergy and parasite defense" },
+        { q: "What does IgD primarily function as?", o: ["A circulating antibody", "A B-cell receptor", "A phagocyte activator", "A complement protein"], a: "A B-cell receptor" },
+        { q: "Active immunity is acquired through:", o: ["Receiving antibodies from mother", "Vaccination or natural infection", "Injection of immune serum", "None of the above"], a: "Vaccination or natural infection" },
+        { q: "Passive immunity can be acquired through:", o: ["Vaccination", "Breast milk or placental transfer", "Natural infection", "All of the above"], a: "Breast milk or placental transfer" },
+        { q: "HIV primarily infects which cells?", o: ["B cells", "Red blood cells", "CD4⁺ T cells", "Neutrophils"], a: "CD4⁺ T cells" },
+        { q: "Which therapy is used to manage HIV?", o: ["Chemotherapy", "Antibiotics", "Antiretroviral therapy (ART)", "Radiotherapy"], a: "Antiretroviral therapy (ART)" },
+        // BLOOD COMPONENTS
+        { q: "What percentage of blood is plasma?", o: ["45%", "55%", "65%", "75%"], a: "55%" },
+        { q: "Which of the following is NOT a function of blood?", o: ["Transport", "Protection", "Digestion", "Regulation"], a: "Digestion" },
+        { q: "Red blood cells are also called:", o: ["Leukocytes", "Thrombocytes", "Erythrocytes", "Phagocytes"], a: "Erythrocytes" },
+        { q: "Which WBC is most abundant in bacterial infections?", o: ["Eosinophils", "Basophils", "Neutrophils", "Lymphocytes"], a: "Neutrophils" },
+        { q: "Eosinophils are increased in:", o: ["Bacterial infections", "Viral infections", "Allergic reactions and parasitic infections", "Bone marrow suppression"], a: "Allergic reactions and parasitic infections" },
+        { q: "Monocytes become which cells in tissues?", o: ["Neutrophils", "Macrophages", "Basophils", "Lymphocytes"], a: "Macrophages" },
+        { q: "Which WBC is responsible for antibody production?", o: ["T cells", "B cells", "Natural killer cells", "Monocytes"], a: "B cells" },
+        { q: "Leukopenia refers to:", o: ["Increase in WBC count", "Decrease in WBC count", "Uncontrolled WBC proliferation", "Normal WBC count"], a: "Decrease in WBC count" },
+        { q: "What is the normal platelet count range?", o: ["50,000–100,000/mm³", "100,000–200,000/mm³", "150,000–400,000/mm³", "400,000–600,000/mm³"], a: "150,000–400,000/mm³" },
+        { q: "Thrombocytopenia results in:", o: ["Excessive clotting", "Excessive bleeding", "Increased WBC count", "Decreased RBC count"], a: "Excessive bleeding" },
+        // BLOOD GROUPS
+        { q: "Which blood group system is the most important in transfusion?", o: ["Rh system", "ABO system", "Bombay system", "Kell system"], a: "ABO system" },
+        { q: "A person with blood group A has which antibodies in plasma?", o: ["Anti-A", "Anti-B", "Anti-AB", "None"], a: "Anti-B" },
+        { q: "The D antigen is part of which blood group system?", o: ["ABO", "Rh", "Bombay", "Duffy"], a: "Rh" },
+        { q: "Rh-negative individuals can develop anti-D antibodies after exposure to:", o: ["Rh-negative blood", "Rh-positive blood", "AB blood", "O blood"], a: "Rh-positive blood" },
+        { q: "Hemolytic disease of the newborn occurs when:", o: ["Mother is Rh-positive, baby is Rh-negative", "Mother is Rh-negative, baby is Rh-positive", "Both are Rh-positive", "Both are Rh-negative"], a: "Mother is Rh-negative, baby is Rh-positive" },
+        { q: "The Bombay blood group lacks which antigen?", o: ["A", "B", "H", "D"], a: "H" },
+        { q: "Which anticoagulant was introduced in 1943?", o: ["Citrate-Glucose", "Acid Citrate Dextrose (ACD)", "Citrate Phosphate Dextrose (CPD)", "CPDA-1"], a: "Acid Citrate Dextrose (ACD)" },
+        { q: "How much ACD is used to preserve 100 mL of blood?", o: ["10 mL", "14 mL", "15 mL", "20 mL"], a: "15 mL" },
+        // GENETICS
+        { q: "DNA is composed of how many nucleotide bases?", o: ["2", "3", "4", "5"], a: "4" },
+        { q: "The observable characteristics of an individual are called:", o: ["Genotype", "Phenotype", "Allele", "Chromosome"], a: "Phenotype" },
+        { q: "Autosomal dominant disorders require how many mutated copies?", o: ["One", "Two", "Three", "None"], a: "One" },
+        { q: "Cystic fibrosis is an example of which inheritance pattern?", o: ["Autosomal dominant", "Autosomal recessive", "X-linked", "Mitochondrial"], a: "Autosomal recessive" },
+        { q: "X-linked disorders primarily affect:", o: ["Females", "Males", "Both equally", "Newborns only"], a: "Males" },
+        { q: "A missense mutation results in:", o: ["A stop codon", "A different amino acid", "No change", "Deletion of a gene"], a: "A different amino acid" },
+        { q: "Why is informed consent important in genetic testing?", o: ["Legally required only", "Ethically and psychologically important", "For insurance purposes only", "To speed up the process"], a: "Ethically and psychologically important" },
+        { q: "A comprehensive genetic family history should cover how many generations?", o: ["One", "Two", "Three", "Four"], a: "Three" },
+        // INFECTION CONTROL
+        { q: "Infection control aims to prevent transmission of:", o: ["Medications", "Infectious agents", "Genetic disorders", "Blood clots"], a: "Infectious agents" },
+        { q: "Biosafety focuses on preventing exposure to:", o: ["Chemical spills", "Radiation", "Infectious agents or biohazards", "Electrical hazards"], a: "Infectious agents or biohazards" },
+        { q: "How many links are in the chain of infection?", o: ["4", "5", "6", "7"], a: "6" },
+        { q: "Which is NOT a portal of exit?", o: ["Respiratory tract", "Blood", "Intact skin", "Wounds"], a: "Intact skin" },
+        { q: "Standard precautions apply to:", o: ["Only infected patients", "All patient care", "Only surgical patients", "Only ICU patients"], a: "All patient care" },
+        { q: "The most important measure in infection control is:", o: ["Glove use", "Hand hygiene", "Gowning", "Mask use"], a: "Hand hygiene" },
+        { q: "When should gloves be changed?", o: ["Every hour", "Between tasks on the same patient", "Once per shift", "Only when visibly soiled"], a: "Between tasks on the same patient" },
+        { q: "Eye protection protects which membranes?", o: ["Dermal", "Mucosal", "Serosal", "Synovial"], a: "Mucosal" },
+        { q: "Which biosafety level is most common in hospital labs?", o: ["BSL-1", "BSL-2", "BSL-3", "BSL-4"], a: "BSL-2" },
+        { q: "BSL-4 labs handle which type of agents?", o: ["Non-pathogenic", "Moderate-risk", "Serious inhalation-risk", "Dangerous exotic agents with no treatment"], a: "Dangerous exotic agents with no treatment" },
+        { q: "Which PPE is preferred for gloves?", o: ["Latex", "Nitrile", "Vinyl", "Rubber"], a: "Nitrile" },
+        { q: "Safety-engineered devices in sharps safety include:", o: ["Reusable needles", "Retractable needles", "Glass syringes", "None of the above"], a: "Retractable needles" },
+        { q: "What is the first step after a needlestick injury?", o: ["Report to supervisor", "Seek medical evaluation", "Wash with soap and water", "Apply antiseptic"], a: "Wash with soap and water" },
+        { q: "Post-exposure prophylaxis for HIV should start within:", o: ["2 hours", "6 hours", "12 hours", "24 hours"], a: "2 hours" },
+        // PATIENT ID
+        { q: "Which is NOT an acceptable patient identifier?", o: ["Full name", "Date of birth", "Room number", "Medical record number"], a: "Room number" },
+        { q: "Patient identification must be verified before:", o: ["Administering medications", "Taking vital signs", "Providing water", "Making the bed"], a: "Administering medications" },
+        { q: "Incorrect patient identification can lead to:", o: ["Improved outcomes", "Medication errors", "Faster recovery", "Better communication"], a: "Medication errors" },
+        { q: "Which blood specimen is used for ABG analysis?", o: ["Venous blood", "Arterial blood", "Capillary blood", "Cord blood"], a: "Arterial blood" },
+        { q: "Capillary blood is commonly used for:", o: ["Complete blood count", "Glucose monitoring", "Coagulation studies", "Blood culture"], a: "Glucose monitoring" },
+        { q: "A midstream urine specimen is collected to:", o: ["Increase volume", "Reduce contamination", "Test for hormones", "Measure pH only"], a: "Reduce contamination" },
+        { q: "A nasopharyngeal swab collects specimens from:", o: ["The throat only", "The back of the nose and throat", "The lungs", "The stomach"], a: "The back of the nose and throat" },
+        { q: "CSF is collected via:", o: ["Venipuncture", "Arterial puncture", "Lumbar puncture", "Thoracentesis"], a: "Lumbar puncture" },
+        { q: "The nurse’s role in specimen collection includes:", o: ["Explaining the procedure", "Interpreting results", "Prescribing tests", "Diagnosing conditions"], a: "Explaining the procedure" },
+        { q: "Specimens should be labeled with:", o: ["Patient’s room number", "Patient’s full name and ID", "Nurse’s name", "Doctor’s name"], a: "Patient’s full name and ID" },
+        // POCT
+        { q: "POCT stands for:", o: ["Patient-Oriented Care Test", "Point-of-Care Testing", "Professional Clinical Testing", "Primary Care Testing"], a: "Point-of-Care Testing" },
+        { q: "Capillary blood for glucose testing comes from:", o: ["Veins", "Arteries", "Capillaries", "Lymphatics"], a: "Capillaries" },
+        { q: "Quality assurance in POCT includes:", o: ["Daily calibration checks", "Weekly patient feedback", "Monthly doctor reviews", "Yearly instrument replacement"], a: "Daily calibration checks" },
+        { q: "Operator competency in POCT requires:", o: ["Initial training only", "Annual competency assessment", "No assessment needed", "Assessment every 5 years"], a: "Annual competency assessment" },
+        { q: "Which is a clinical application of POCT?", o: ["MRI scanning", "Blood glucose monitoring", "Surgical procedures", "Physical therapy"], a: "Blood glucose monitoring" },
+        { q: "Cardiac marker testing in POCT helps diagnose:", o: ["Diabetes", "Myocardial infarction", "Anemia", "Infection"], a: "Myocardial infarction" },
+        { q: "Advantages of capillary blood collection include:", o: ["Large sample volume", "Less invasive", "Requires venous access", "Higher risk of infection"], a: "Less invasive" },
+        { q: "Before capillary puncture, the site should be:", o: ["Warmed if needed", "Cooled", "Rubbed vigorously", "Shaved"], a: "Warmed if needed" },
+        { q: "After capillary puncture, the first drop of blood should be:", o: ["Collected", "Wiped away", "Ignored", "Saved for culture"], a: "Wiped away" },
+        { q: "Post-collection care includes:", o: ["Applying pressure until bleeding stops", "Massaging the site", "Applying heat", "Leaving it uncovered"], a: "Applying pressure until bleeding stops" },
+        // ADDITIONAL
+        { q: "Which WBC releases histamine?", o: ["Neutrophils", "Eosinophils", "Basophils", "Lymphocytes"], a: "Basophils" },
+        { q: "Helper T cells are identified by which marker?", o: ["CD8⁺", "CD4⁺", "CD19⁺", "CD56⁺"], a: "CD4⁺" },
+        { q: "Which antibody can cross the placenta?", o: ["IgA", "IgM", "IgG", "IgD"], a: "IgG" },
+        { q: "Artificially acquired passive immunity involves:", o: ["Vaccination", "Injection of preformed antibodies", "Natural infection", "Breastfeeding"], a: "Injection of preformed antibodies" },
+        { q: "Blood is considered a:", o: ["Epithelial tissue", "Connective tissue", "Muscle tissue", "Nervous tissue"], a: "Connective tissue" },
+        { q: "Granulocytes include all EXCEPT:", o: ["Neutrophils", "Eosinophils", "Basophils", "Lymphocytes"], a: "Lymphocytes" },
+        { q: "Leukemia is characterized by:", o: ["Decreased WBC count", "Uncontrolled proliferation of abnormal WBCs", "Increased RBC count", "Platelet deficiency"], a: "Uncontrolled proliferation of abnormal WBCs" },
+        { q: "Platelets are derived from:", o: ["Erythrocytes", "Megakaryocytes", "Lymphocytes", "Monocytes"], a: "Megakaryocytes" },
+        { q: "Whole blood for CBC is collected in:", o: ["Heparin tube", "EDTA tube", "Serum tube", "Citrate tube"], a: "EDTA tube" },
+        { q: "Blood transfusion is defined as:", o: ["Transplanting an organ", "Transferring whole blood or components", "Donating plasma only", "Injecting saline"], a: "Transferring whole blood or components" },
+        { q: "Landsteiner’s law relates to:", o: ["Blood pressure", "Blood groups", "Blood clotting", "Blood flow"], a: "Blood groups" },
+        { q: "Rh antibodies are typically:", o: ["IgM", "IgG", "IgA", "IgE"], a: "IgG" },
+        { q: "Hemolytic disease can cause:", o: ["Hypertension", "Anemia in the fetus", "Diabetes", "Kidney failure"], a: "Anemia in the fetus" },
+        { q: "The Bombay phenotype is:", o: ["Common", "Rare", "Found only in males", "Found only in females"], a: "Rare" },
+        { q: "Humans have approximately how many genes?", o: ["10,000–15,000", "20,000–25,000", "30,000–35,000", "40,000–45,000"], a: "20,000–25,000" },
+        { q: "BRCA1 mutations follow which inheritance pattern?", o: ["Autosomal recessive", "X-linked", "Autosomal dominant", "Mitochondrial"], a: "Autosomal dominant" },
+        { q: "A nonsense mutation results in:", o: ["A different amino acid", "A premature stop codon", "No change", "Gene duplication"], a: "A premature stop codon" },
+        { q: "Nursing responsibilities in genetic testing include:", o: ["Prescribing tests", "Obtaining informed consent", "Interpreting results", "Diagnosing disorders"], a: "Obtaining informed consent" },
+        { q: "Infection control policies protect:", o: ["Only patients", "Only healthcare workers", "Patients, healthcare workers, and visitors", "Only visitors"], a: "Patients, healthcare workers, and visitors" },
+        { q: "The reservoir in the chain of infection is where the pathogen:", o: ["Enters the host", "Leaves the host", "Lives and multiplies", "Is destroyed"], a: "Lives and multiplies" },
+        { q: "Mode of transmission includes:", o: ["Contact and droplet", "Only airborne", "Only vector-borne", "Only ingestion"], a: "Contact and droplet" },
+        { q: "Safe injection practices include:", o: ["Reusing syringes", "Using single-dose vials", "Entering multi-dose vials with used syringes", "Sharing needles"], a: "Using single-dose vials" },
+        { q: "Risk assessment in biosafety considers:", o: ["Only the pathogen", "Pathogen, procedure, equipment, and competency", "Only equipment", "Only worker competency"], a: "Pathogen, procedure, equipment, and competency" },
+        { q: "Controlled access in labs prohibits:", o: ["Wearing PPE", "Eating and drinking", "Hand hygiene", "Using safety cabinets"], a: "Eating and drinking" },
+        { q: "Engineering controls include:", o: ["Hand washing", "Biological safety cabinets", "Gloves", "Gowns"], a: "Biological safety cabinets" },
+        { q: "BSL-3 labs require:", o: ["Standard practices only", "Negative pressure rooms", "No special containment", "Full-body suits"], a: "Negative pressure rooms" },
+        { q: "PPE for splash risk includes:", o: ["Gloves only", "Gowns only", "Eye protection", "Masks only"], a: "Eye protection" },
+        { q: "After a mucous membrane exposure, flush with water for:", o: ["5 minutes", "10 minutes", "15 minutes", "30 minutes"], a: "15 minutes" }
+    ];
+
+    // --- WORKING DATA & STATE ---
+    let quizData = [];
+    const userAnswers = new Array(quizDataRaw.length).fill(null);
+    const questionFlags = new Array(quizDataRaw.length).fill(false);
+    const eliminatedState = new Array(quizDataRaw.length).fill([]);
+    let soundEnabled = true;
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timerInterval;
+    const totalTimeSeconds = 60 * 60; // 60 Minutes
+
+    // --- DOM ---
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const rationalBox = document.getElementById('rational-box');
+    const rationalText = document.getElementById('rational-text');
+    const navGrid = document.getElementById('nav-grid');
+    const progressEl = document.getElementById('progress-text');
+    const timerDisplay = document.getElementById('timer-display');
+    const quizView = document.getElementById('quiz-view');
+    const resultsView = document.getElementById('results-view');
+    const reviewList = document.getElementById('review-list');
+    const flagBtn = document.getElementById('btn-flag');
+    const eliminateBtn = document.getElementById('btn-eliminate');
+
+    // --- INITIALIZATION ---
+    function init() {
+        createBackgroundEmojis();
+        processAndShuffleData();
+        createNavGrid();
+        loadQuestion(0);
+        startTimer();
+    }
+
+    // --- SHUFFLING LOGIC ---
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function processAndShuffleData() {
+        quizData = JSON.parse(JSON.stringify(quizDataRaw));
+        shuffleArray(quizData);
+
+        quizData.forEach((q, qIdx) => {
+            const correctText = q.a;
+            
+            // Add Rational Logic
+            // Since we don't have textbook rationales, we generate a high-quality generic one based on the correct answer
+            q.rational = `The correct answer is <strong>"${correctText}"</strong>. This option aligns with the standard clinical definitions and protocols for the topic presented in this question.`;
+            
+            let optionsMeta = q.o.map(text => ({ text: text, isCorrect: (text === correctText) }));
+            shuffleArray(optionsMeta);
+            
+            q.shuffledOptions = optionsMeta;
+        });
+    }
+
+    // --- SOUND FX ---
+    function speak(text, pitch = 1, rate = 1) {
+        if (!soundEnabled) return;
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.pitch = pitch;
+            utterance.rate = rate;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        const btn = document.getElementById('btn-sound');
+        const icon = document.getElementById('sound-icon');
+        if (soundEnabled) {
+            btn.innerHTML = `<span id="sound-icon">🔊</span> Sound ON`;
+            btn.style.color = '#fff';
+        } else {
+            btn.innerHTML = `<span id="sound-icon">🔇</span> Sound OFF`;
+            btn.style.color = '#666';
+        }
+    }
+
+    // --- BACKGROUND EMOJIS ---
+    function createBackgroundEmojis() {
+        const emojis = ['🦠', '🩸', '💉', '🧬', '🧪', '🧫', '🦠', '🔬', '🧬', '🧫'];
+        const container = document.getElementById('emoji-bg');
+        for (let i = 0; i < 25; i++) {
+            const span = document.createElement('div');
+            span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            span.className = 'bg-emoji';
+            span.style.left = Math.random() * 100 + 'vw';
+            span.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            span.style.animationDelay = (Math.random() * 15) + 's';
+            container.appendChild(span);
+        }
+    }
+
+    // --- TIMER ---
+    function startTimer() {
+        let time = totalTimeSeconds;
+        updateTimerDisplay(time);
+        timerInterval = setInterval(() => {
+            time--;
+            updateTimerDisplay(time);
+            if (time <= 0) {
+                clearInterval(timerInterval);
+                endTest(true); 
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        if (seconds < 300) timerDisplay.style.color = 'red'; 
+    }
+
+    // --- NAV GRID ---
+    function createNavGrid() {
+        navGrid.innerHTML = '';
+        quizData.forEach((_, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'nav-btn';
+            btn.innerText = idx + 1;
+            btn.id = `nav-${idx}`;
+            btn.onclick = () => loadQuestion(idx);
+            navGrid.appendChild(btn);
+        });
+        updateNavStyles();
+    }
+
+    function updateNavStyles() {
+        quizData.forEach((_, idx) => {
+            const btn = document.getElementById(`nav-${idx}`);
+            btn.className = 'nav-btn'; 
+            if (idx === currentQuestionIndex) btn.classList.add('active');
+            if (userAnswers[idx] !== null) btn.classList.add('answered');
+            if (questionFlags[idx]) btn.classList.add('flagged');
+        });
+    }
+
+    // --- LOAD QUESTION ---
+    function loadQuestion(index) {
+        currentQuestionIndex = index;
+        const currentData = quizData[index];
+        
+        questionEl.innerText = currentData.q;
+        progressEl.innerText = `Question ${index + 1} of ${quizData.length}`;
+        
+        if (questionFlags[index]) flagBtn.classList.add('active');
+        else flagBtn.classList.remove('active');
+
+        if (userAnswers[index] !== null || eliminatedState[index].length >= 2) {
+            eliminateBtn.disabled = true;
+        } else {
+            eliminateBtn.disabled = false;
+        }
+
+        optionsEl.innerHTML = '';
+        
+        // Hide Rational initially when loading a new question
+        rationalBox.style.display = 'none';
+
+        currentData.shuffledOptions.forEach((optObj, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = optObj.text;
+            btn.dataset.index = i;
+            
+            if (eliminatedState[index].includes(i)) {
+                btn.classList.add('eliminated');
+            }
+
+            if (userAnswers[index] !== null) {
+                btn.classList.add('disabled');
+                if (i === userAnswers[index]) btn.classList.add('selected');
+                // Show Rational if already answered
+                showRational(currentData.rational);
+            } else {
+                if (!eliminatedState[index].includes(i)) {
+                    btn.onclick = () => selectAnswer(i, btn);
+                } else {
+                    btn.onclick = null;
+                }
+            }
+            optionsEl.appendChild(btn);
+        });
+
+        updateNavStyles();
+    }
+
+    // --- RATIONAL LOGIC ---
+    function showRational(text) {
+        rationalText.innerHTML = text;
+        rationalBox.style.display = 'block';
+        // Smooth scroll to bottom
+        const body = document.querySelector('.quiz-body');
+        body.scrollTop = body.scrollHeight;
+    }
+
+    // --- FLAGGING ---
+    function toggleFlag() {
+        questionFlags[currentQuestionIndex] = !questionFlags[currentQuestionIndex];
+        loadQuestion(currentQuestionIndex);
+    }
+
+    // --- ELIMINATE ANSWERS ---
+    function eliminateAnswers() {
+        if (eliminatedState[currentQuestionIndex].length >= 2) return;
+
+        const currentData = quizData[currentQuestionIndex];
+        const allIndices = currentData.shuffledOptions.map((_, i) => i);
+        const wrongIndices = allIndices.filter(i => !currentData.shuffledOptions[i].isCorrect);
+        
+        shuffleArray(wrongIndices);
+        const toHide = wrongIndices.slice(0, 2);
+        
+        eliminatedState[currentQuestionIndex] = toHide;
+        
+        const buttons = optionsEl.getElementsByClassName('option-btn');
+        toHide.forEach(idx => {
+            buttons[idx].classList.add('eliminated');
+            buttons[idx].onclick = null;
+        });
+
+        speak("Eliminated", 1.2, 1.5);
+        eliminateBtn.disabled = true;
+    }
+
+    // --- SELECT ANSWER ---
+    function selectAnswer(optionIndex, btnElement) {
+        if (eliminatedState[currentQuestionIndex].includes(optionIndex)) return;
+
+        userAnswers[currentQuestionIndex] = optionIndex;
+        
+        const currentData = quizData[currentQuestionIndex];
+        const isCorrect = currentData.shuffledOptions[optionIndex].isCorrect;
+
+        if (isCorrect) {
+            speak("Yes!", 1.2, 1.2);
+            fireConfetti(btnElement.getBoundingClientRect().left + 50, btnElement.getBoundingClientRect().top, 30);
+        } else {
+            speak("Oh come on", 0.8, 1.1);
+            btnElement.style.animation = "shake 0.5s";
+            setTimeout(() => btnElement.style.animation = "", 500);
+        }
+
+        const allOpts = optionsEl.getElementsByClassName('option-btn');
+        for (let btn of allOpts) {
+            btn.classList.add('disabled');
+            btn.onclick = null;
+        }
+        btnElement.classList.add('selected');
+
+        updateNavStyles();
+        
+        // Show Rational after selection
+        showRational(currentData.rational);
+    }
+
+    // --- NAVIGATION ---
+    function changeQuestion(direction) {
+        const newIndex = currentQuestionIndex + direction;
+        if (newIndex >= 0 && newIndex < quizData.length) {
+            loadQuestion(newIndex);
+        }
+    }
+
+    // --- END TEST ---
+    function endTest(auto = false) {
+        clearInterval(timerInterval);
+        
+        score = 0;
+        quizData.forEach((q, i) => {
+            if (userAnswers[i] !== null) {
+                if (q.shuffledOptions[userAnswers[i]].isCorrect) {
+                    score++;
+                }
+            }
+        });
+
+        quizView.style.display = 'none';
+        resultsView.style.display = 'block';
+
+        const percentage = Math.round((score / quizData.length) * 100);
+        document.getElementById('final-score').innerText = `${percentage}%`;
+        
+        if (percentage >= 70) {
+            fireConfetti(window.innerWidth / 2, window.innerHeight / 2, 200);
+            speak("Congratulations, you passed.");
+        } else {
+            speak("Keep studying.");
+        }
+
+        reviewList.innerHTML = '';
+        quizData.forEach((q, i) => {
+            const item = document.createElement('div');
+            let status = "neutral";
+            
+            if (userAnswers[i] === null) {
+                status = "neutral";
+            } else if (q.shuffledOptions[userAnswers[i]].isCorrect) {
+                status = "correct";
+            } else {
+                status = "incorrect";
+            }
+            
+            item.className = `review-item ${status}`;
+            
+            let html = `<span class="rev-q">${i + 1}. ${q.q} ${questionFlags[i] ? '🚩' : ''}</span>`;
+            
+            q.shuffledOptions.forEach((opt, idx) => {
+                let classes = "rev-opt";
+                let label = "";
+                
+                if (idx === userAnswers[i]) {
+                    classes += " user-choice";
+                    label = "(Your Answer) ";
+                }
+                
+                if (opt.isCorrect) {
+                    classes += " right-answer";
+                    label += "✔ Correct";
+                } else if (idx === userAnswers[i] && !opt.isCorrect) {
+                    classes += " wrong-answer";
+                    label += "✘ Wrong";
+                }
+
+                html += `<span class="${classes}">${label} ${opt.text}</span>`;
+            });
+
+            // Add Rational to Review
+            html += `<div class="rational-card" style="display:block; animation:none; margin-top:10px;">
+                        <div class="rational-header">💡 Clinical Rational</div>
+                        <div class="rational-text">${q.rational}</div>
+                     </div>`;
+
+            item.innerHTML = html;
+            reviewList.appendChild(item);
+        });
+    }
+
+    // --- CONFETTI ---
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function fireConfetti(x, y, count) {
+        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff', '#ffffff'];
+        for (let i = 0; i < count; i++) {
+            particles.push({
+                x: x || window.innerWidth / 2,
+                y: y || window.innerHeight / 2,
+                vx: (Math.random() - 0.5) * 15,
+                vy: (Math.random() - 0.5) * 15 - 5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 6 + 3,
+                life: 100,
+                gravity: 0.4
+            });
+        }
+    }
+
+    function updateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.life--;
+            p.size *= 0.96;
+
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, p.size, p.size);
+
+            if (p.life <= 0 || p.size < 0.5) {
+                particles.splice(i, 1);
+            }
+        }
+        requestAnimationFrame(updateConfetti);
+    }
+    updateConfetti();
+
+    // Start
+    init();
+
+</script>
+</body>
+</html>
